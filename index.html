@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Intro to AJAX</title>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	<body style="background-color: #34495e;">
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-12 col-md-8">
+					<form class="form-inline">
+						<div class="form-group">
+							<label for="street">Street</label>
+							<input type="text" class="form-control" name="street" id="street" placeholder="Street">
+						</div>
+						<div class="form-group">
+							<label for="City">City</label>
+							<input type="text" class="form-control" name="street" id="city" placeholder="City">
+						</div>
+						
+						<button type="button" class="btn btn-primary">Submit</button>
+						
+					</form>
+				</div>
+				<div class="greeting col-md-4">
+					<h2>Where do you want to live?</h2>
+				</div>
+			</div>
+			<div class="container">
+				<div class="row transparent" >
+					<div class="col-sm-8 nytimes-container">
+						<h4 id="nytimes-header">New York Times Articles</h4>
+						<ul id="nytimes-articles" class="article-list">
+							<p>What's going on in your new city? Enter an address and hit submit and the NY Times will tell you here!</p>
+						</ul>
+					</div>
+					<div class="col-sm-4 wikipedia-container">
+						<h4>Relevant Wikipedia Links</h4>
+						<ul id="wikipedia-articles" class="article-list">
+							<p>Type in an address above and find relevant Wikipedia articles here!</p>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="target">
+				
+			</div>
+		</div>
+		<script src="jquery-3.2.1.min.js"></script>
+		<script>
+		var streetString;
+		var cityString;
+		var url;
+		var width;
+		var height;
+		var headerString = $('#nytimes-header').text();
+		$('document').ready(function() {
+			
+			$('.btn').on('click',getVal);
+			
+		});
+		function getVal() {
+			
+			streetString = $('#street').val();
+			cityString = $('#city').val();
+			width = $(window).width();
+			height = $(window).height();
+			var searchParam = streetString + ", " + cityString;
+			//console.log(width + 'x' + height);
+			var source = "http://maps.googleapis.com/maps/api/streetview?size=" + width + "x" + height +"&location=" + searchParam;
+			var greetingText = "So you want to live at " + streetString + ", " + cityString + "?";
+			//console.log(source);
+			setWallpaper(source);
+			setGreeting(greetingText);
+			getNewYorkTimesArticles(searchParam);
+			getWikipediaArticles(streetString,cityString);
+			
+			
+			
+			
+		}
+		function setWallpaper(sourceUrl) {
+			$('body').attr('style','');
+			$('.target').html('<img class="bgimg" src="' + sourceUrl + '" alt="street view image">');
+		}
+		function setGreeting(greeting) {
+			$('.greeting').html('<h2>' + greeting + '</h2>');
+		}
+		function getNewYorkTimesArticles(searchString) {
+				url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+				url += '?' + $.param({
+								'api-key': "b7342e2df9504de3afd4b6aadff711ee",
+								'q': searchString,
+								'sort': "newest"
+			});
+				$.ajax({
+					url: url,
+					method: 'GET',
+					}).done(function(result) {
+						
+						$('#nytimes-header').empty().html(headerString + " about " + searchString);
+						$('#nytimes-header').next().empty();
+						$.each(result.response.docs,function(key,value) {
+							
+							$('#nytimes-articles').append('<li class="article">' + '<a href="' + value.web_url + '"><h4>' + value.headline.main + '</h4></a><p>' + value.snippet + '</p></li>');
+						})
+						//console.log(result.response.docs);
+					}).fail(function(err) {
+					console.log("Error reaching New York Times!");
+					$('#nytimes-header').text("Oops! Could not reach New York Times.");
+					throw err;
+					});
+			}
+			function getWikipediaArticles(street,city) {
+				var wikiRequestTimeout = setTimeout(function () {
+					$('#wikipedia-articles').html('<p class="text-danger">Oops! Failed to get wikipedia resources.</p>');
+				},8000);
+
+				$.ajax({
+				url: "https://en.wikipedia.org/w/api.php",
+				jsonp: "callback",
+				dataType: 'jsonp',
+				data: {
+				action: "query",
+				list: "search",
+				srsearch: street + city,
+				format: "json"
+				},
+				success: function(response) {
+					console.log(response.query.search);
+					$('#wikipedia-articles').empty();
+					$.each(response.query.search,function(key,value) {
+						
+						$('#wikipedia-articles').append('<li class="article">' + '<a href="http://en.wikipedia.org/wiki/' + value.title + '"><h4>' + value.title + '</h4></a></li>');
+					});
+					clearTimeout(wikiRequestTimeout);
+
+				
+				}
+			});
+			}
+			</script>
+		</body>
+	</html>

@@ -1,0 +1,28 @@
+* {box-sizing:border-box;}
+
+.bgimg {
+    position:fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index:-1;
+    opacity:1;
+}
+.transparent {
+    background-color: whitesmoke;
+    opacity: 0.7;
+    color: black;
+}
+.article-list {
+    margin: 0;
+    padding: 0;
+}
+
+.article {
+    list-style-type: none;
+    padding:10px;
+    border-top: 1px solid #CCC;
+}
+.article:first-child {
+    border-top:none;
+}
